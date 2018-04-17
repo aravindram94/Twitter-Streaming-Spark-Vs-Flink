@@ -1,0 +1,4 @@
+kafka-python==1.4.2
+python-twitter==3.4.1
+tweepy==3.5.0
+pymongo==3.6.1

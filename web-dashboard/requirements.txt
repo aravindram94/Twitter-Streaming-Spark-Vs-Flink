@@ -1,0 +1,17 @@
+dash==0.20.0
+dash-core-components==0.18.1
+dash-html-components==0.8.0
+dash-renderer==0.11.3
+dash-table-experiments==0.6.0
+decorator==4.2.1
+Flask==0.12.2
+Flask-Compress==1.4.0
+numpy==1.14.0
+pandas==0.22.0
+pandas-access==0.0.1  # # brew install mdbtools
+pandas-datareader==0.6.0
+plotly==2.3.0
+scikit-learn==0.19.1
+scipy==1.0.0
+six==1.11.0
+sklearn==0.0
