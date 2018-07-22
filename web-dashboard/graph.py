@@ -6,6 +6,8 @@ import dash
 from dash.dependencies import Input, Output
 import dash_core_components as dcc
 import dash_html_components as html
+
+from random import *
 import dash_table_experiments as dt
 
 import pandas as pd
@@ -18,30 +20,40 @@ app = dash.Dash()
 
 app.scripts.config.serve_locally = True
 
-# data = [{'x': 100, 'y': 200}, {'x': 300, 'y': 400}];
-# dff = pd.DataFrame(data)
+list_of_states = ["Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
+                  "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
+                  "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
+                  "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York",
+                  "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island",
+                  "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington",
+                  "West Virginia", "Wisconsin", "Wyoming"]
 
-df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/2011_us_ag_exports.csv')
+list_of_short_codes = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
+                       "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY",
+                       "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV",
+                       "WI", "WY"]
 
-for col in df.columns:
-    df[col] = df[col].astype(str)
-
-scl = [[0.0, 'rgb(242,240,247)'],[0.2, 'rgb(218,218,235)'],[0.4, 'rgb(188,189,220)'],\
-            [0.6, 'rgb(158,154,200)'],[0.8, 'rgb(117,107,177)'],[1.0, 'rgb(84,39,143)']]
-
-df['text'] = df['state'] + '<br>' +\
-    'Beef '+df['beef']+' Dairy '+df['dairy']+'<br>'+\
-    'Fruits '+df['total fruits']+' Veggies ' + df['total veggies']+'<br>'+\
-    'Wheat '+df['wheat']+' Corn '+df['corn']
+scl = [[0.0, '#FF0000'],[0.2, '#FF5700'],[0.4, '#FF9E00'], [0.5, '#F7FF00'],
+        [0.6, '#D4FF00'], [0.8, '#4AB703'], [1.0, '#03B712']]
 
 
-def create_scatter_trace():
+def get_states_data():
+    dict_array = []
+    for i in range(0, len(list_of_states), 1):
+        dictionary = {'state': list_of_states[i], 'code': list_of_short_codes[i], 'sentiment': uniform(0, 1), 'weather': randint(-10, 40)}
+        dictionary["text"] = dictionary["state"] + "<br>temperature : " + str(dictionary["weather"]) + " degree"
+        dict_array.append(dictionary)
+    return pd.DataFrame(dict_array)
+
+
+
+def create_scatter_trace(df):
     data = [dict(
         type='choropleth',
         colorscale=scl,
         autocolorscale=False,
         locations=df['code'],
-        z=df['total exports'].astype(float),
+        z=df['sentiment'].astype(float),
         locationmode='USA-states',
         text=df['text'],
         marker=dict(
@@ -50,11 +62,11 @@ def create_scatter_trace():
                 width=2
             )),
         colorbar=dict(
-            title="Millions USD")
+            title="Sentiment Scale")
     )]
 
     layout = dict(
-        title='2011 US Agriculture Exports by State<br>(Hover for breakdown)',
+        title='Geo Spatial(US states) analysis',
         geo=dict(
             scope='usa',
             projection=dict(type='albers usa'),
@@ -63,7 +75,14 @@ def create_scatter_trace():
     )
     return go.Figure(data=data, layout=layout)
 
+
 app.layout = html.Div([
+    dcc.Input(
+        placeholder='Enter search term...',
+        type='text',
+        value=''
+    ),
+    html.Button('Search', id='button'),
     html.Div([
         html.Div(
             dcc.Graph(
@@ -71,17 +90,22 @@ app.layout = html.Div([
                 style={
                     'overflow-x': 'wordwrap'
                 },
-                figure=create_scatter_trace()
+                figure=create_scatter_trace(get_states_data())
             )
         )
-    ])
+    ]),
+    dcc.Interval(
+        id='interval-component',
+        interval=1*2000, # in milliseconds
+        n_intervals=0
+    )
 ])
 
-# @app.callback(
-#     Output('click-data', 'children'),
-#     [Input('graph', 'clickData')])
-# def display_click_data(clickData):
-#     return json.dumps(clickData, indent=2)
+
+@app.callback(Output('graph', 'figure'),
+              [Input('interval-component', 'n_intervals')])
+def update_metrics(n):
+    return create_scatter_trace(get_states_data())
 
 
 app.css.append_css({
